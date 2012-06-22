@@ -6,8 +6,15 @@ expressServer.use(express.bodyParser());
 expressServer.use(express.errorHandler());
 expressServer.use(express.static(__dirname + "/public"));
 
-var socket = socketio.listen(expressServer);
+var io = socketio.listen(expressServer);
 
 var port = parseInt(process.env.PORT, 10) || 1337;
 expressServer.listen(port);
 console.info("listen port ", port);
+
+
+io.sockets.on("connection", function (socket) {
+  	socket.on("sketch", function(data) {
+		socket.broadcast.emit("sketch", data);
+	});
+});
