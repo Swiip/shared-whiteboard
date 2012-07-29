@@ -9,54 +9,86 @@
         <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css"/>
         <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
         <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
-        <script src="js/socket.io.js"></script>
+        <script src="js/socket.io.min.js"></script>
 		<script src="js/raphael-min.js"></script>
-        <script src="js/raphael.sketchpad.js"></script>
+        <script src="js/raphael.whiteboard.js"></script>
+        <script src="cordova-1.8.1.js"></script>
         <script type="text/javascript">
-            var socket, whiteboard;
+            var socket, whiteboardName;
 
             $(document).bind('pageinit', function(event) {
-                socket = io.connect("http://192.168.1.21:1337");
+                socket = io.connect("");
 
                 $(".whiteboard-name").live("change", function(event) {
-                    whiteboard = $(".whiteboard-name").val();
+                    whiteboardName = $(".whiteboard-name").val();
                 });
-            });
 
-			/*$("#home").live("pageshow", function(event) {
-				console.log("home");
-			});*/
-            $("#whiteboard").live("pageinit", function(event) {
-                if(!whiteboard || whiteboard == "") {
+                console.log("page init ", whiteboardName);
+                if(!whiteboardName || whiteboardName == "") {
                     $.mobile.changePage("#home");
                 }
             });
-			$("#whiteboard").live("pageshow", function(event) {
-				console.log("whiteboard", whiteboard);
 
-				var sketchpad = Raphael.sketchpad("editor", {
-					width: "100%",
-					height: "100%",
-					editing: true
-				});
+			$("#home").live("pageshow", function(event) {
+				$(".open-button").live("click", function(event) {
+                    window.whiteboard = Raphael.whiteboard("editor", {
+                        width: "100%",
+                        height: "100%",
+                        editing: true
+                    });
+                });
+			});
+            $("#whiteboard").live("pageinit", function(event) {
+                
+            });
+			$("#whiteboard").live("pageshow", function(event) {
+				console.log("whiteboard", whiteboardName);
+
+                if(!whiteboardName || whiteboardName == "") {
+                    return;
+                }
 
                 var listening = true;
 
-				sketchpad.change(function() {
+				whiteboard.addChangeHandler(function(attr) {
                     if(listening) {
-                        socket.emit("sketch", {
-                            whiteboard: whiteboard,
-                            sketch: sketchpad.json()
+                        socket.emit("element", {
+                            whiteboard: whiteboardName,
+                            type: attr
                         });
                     }
 				});
 
-                socket.on("sketch", function(data) {
-                    if(data.whiteboard == whiteboard) {
+                socket.on("element", function(attr) {
+                    if(data.whiteboard == whiteboardName) {
                         listening = false;
-                        sketchpad.json(data.sketch);
+                        whiteboard.paper().add([attr]);
                         listening = true;
                     }
+                });
+
+                $(".add-picture-button").live("click", function(event) {
+                    navigator.camera.getPicture(function(data) {
+                        console.log("camera success ", data);
+
+                        var src;
+                        //Hook pour le bouchon PhoneGap
+                        if(data == "chrome-logo.png") {
+                            src = data;
+                        } else {
+                            src = "data:image/jpeg;base64," + data;
+                        }
+                        listening = false;
+                        whiteboard.addImage(src);
+                        listening = true;
+                        $.mobile.changePage("#whiteboard");
+
+                    }, function(data) {
+                        console.log("camera fail " + data);
+                    }, {
+                        quality: 20,
+                        destinationType: Camera.DestinationType.DATA_URL
+                    });
                 });
 			});
         </script>
@@ -80,10 +112,17 @@
         <div data-role="page" id="whiteboard">
         	<div data-role="header">
                 <h1>
+                    <a href="#options" data-icon="gear" class="ui-btn-right">Options</a>
                     Whiteboard
                 </h1>
             </div>
             <div id="editor"></div>
+        </div>
+        <div data-role="page" id="options">
+            <div data-role="header">
+                <h1>Options</h1>
+            </div>
+            <a data-role="button" class="add-picture-button">Add a picture</a>
         </div>
     </body>
 

@@ -258,59 +258,49 @@
 			_options.editing = mode;
 			if (_options.editing) {
 				if (_options.editing == "erase") {
-					// Cursor is crosshair, so it looks like we can do something.
-					$(_container).css("cursor", "crosshair");
-					$(_container).unbind("vmousedown", _mousedown);
-					$(_container).unbind("vmousemove", _mousemove);
-					$(_container).unbind("vmouseup", _mouseup);
-					$(document).unbind("vmouseup", _mouseup);
-
-					// iPhone Events
-					/*var agent = navigator.userAgent;
-					if (agent.indexOf("iPhone") > 0 || agent.indexOf("iPod") > 0) {*/
-					if($.mobile) {
-						$(_container).unbind("vmousedown", _touchstart);
-						$(_container).unbind("vmousemove", _touchmove);
-						$(_container).unbind("vmouseup", _touchend);
+					if(!$.mobile) {
+						// Cursor is crosshair, so it looks like we can do something.
+						$(_container).css("cursor", "crosshair");
+						$(_container).unbind("mousedown", _mousedown);
+						$(_container).unbind("mousemove", _mousemove);
+						$(_container).unbind("mouseup", _mouseup);
+					} else {
+						$(_container).unbind("touchstart", _touchstart);
+						$(_container).unbind("touchmove", _touchmove);
+						$(_container).unbind("touchend", _touchend);
 					}
+					// Handle the case when the mouse is released outside the canvas.
+					$(document).unbind("vmouseup", _mouseup);
 				} else {
-					// Cursor is crosshair, so it looks like we can do something.
-					$(_container).css("cursor", "crosshair");
-
-					$(_container).bind("vmousedown", _mousedown);
-					$(_container).bind("vmousemove", _mousemove);
-					$(_container).bind("vmouseup", _mouseup);
-
+					if(!$.mobile) {
+						// Cursor is crosshair, so it looks like we can do something.
+						$(_container).css("cursor", "crosshair");
+						$(_container).bind("vmousedown", _mousedown);
+						$(_container).bind("vmousemove", _mousemove);
+						$(_container).bind("vmouseup", _mouseup);
+					} else {
+						$(_container).bind("touchstart", _touchstart);
+						$(_container).bind("touchmove", _touchmove);
+						$(_container).bind("touchend", _touchend);
+					}
 					// Handle the case when the mouse is released outside the canvas.
 					$(document).bind("vmouseup", _mouseup);
-
-					// iPhone Events
-					/*var agent = navigator.userAgent;
-					if (agent.indexOf("iPhone") > 0 || agent.indexOf("iPod") > 0) {*/
-					if($.mobile) {
-						console.log("toto");
-						$(_container).bind("vmousedown", _touchstart);
-						$(_container).bind("vmousemove", _touchmove);
-						$(_container).bind("vmouseup", _touchend);
-					}
 				}
 			} else {
 				// Reverse the settings above.
-				$(_container).attr("style", "cursor:default");
-				$(_container).unbind("vmousedown", _mousedown);
-				$(_container).unbind("vmousemove", _mousemove);
-				$(_container).unbind("vmouseup", _mouseup);
-				$(document).unbind("vmouseup", _mouseup);
-				
-				// iPhone Events
-				/*var agent = navigator.userAgent;
-				if (agent.indexOf("iPhone") > 0 || agent.indexOf("iPod") > 0) {*/
-				if($.mobile) {
-					console.log("toto");
-					$(_container).unbind("vmousedown", _touchstart);
-					$(_container).unbind("vmousemove", _touchmove);
-					$(_container).unbind("vmouseup", _touchend);
+				if(!$.mobile) {
+					// Cursor is crosshair, so it looks like we can do something.
+					$(_container).attr("style", "cursor:default");
+					$(_container).unbind("vmousedown", _mousedown);
+					$(_container).unbind("vmousemove", _mousemove);
+					$(_container).unbind("vmouseup", _mouseup);
+				} else {
+					$(_container).unbind("touchstart", _touchstart);
+					$(_container).unbind("touchmove", _touchmove);
+					$(_container).unbind("touchend", _touchend);
 				}
+				// Handle the case when the mouse is released outside the canvas.
+				$(document).unbind("vmouseup", _mouseup);
 			}
 			
 			return self; // function-chaining
@@ -428,22 +418,20 @@
 			e = e.originalEvent;
 			e.preventDefault();
 
-			//console.log(e);
-
-			/*if (e.touches.length == 1) {
+			if (e.touches.length == 1) {
 				var touch = e.touches[0];
 				_mousedown(touch);
-			}*/
+			}
 		}
 		
 		function _touchmove(e) {
 			e = e.originalEvent;
 			e.preventDefault();
 
-			/*if (e.touches.length == 1) {
+			if (e.touches.length == 1) {
 				var touch = e.touches[0];
 				_mousemove(touch);
-			}*/
+			}
 		}
 		
 		function _touchend(e) {

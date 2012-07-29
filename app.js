@@ -14,7 +14,7 @@ console.info("listen port ", port);
 
 
 io.sockets.on("connection", function (socket) {
-  	socket.on("sketch", function(data) {
-		socket.broadcast.emit("sketch", data);
+  	socket.on("element", function(data) {
+		socket.broadcast.emit("element", data);
 	});
 });
