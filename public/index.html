@@ -52,15 +52,21 @@
 
 				whiteboard.addChangeHandler(function(attr) {
                     if(listening) {
-                        socket.emit("element", {
-                            whiteboard: whiteboardName,
-                            type: attr
-                        });
+                        attr.whiteboard = whiteboardName;
+                        socket.emit("element", attr);
                     }
 				});
 
+                socket.emit("connect", {
+                    whiteboard: whiteboardName
+                });
+                socket.on("init", function(elements) {
+                    listening = false;
+                    whiteboard.paper().add(elements);
+                    listening = true;
+                });
                 socket.on("element", function(attr) {
-                    if(data.whiteboard == whiteboardName) {
+                    if(attr.whiteboard == whiteboardName) {
                         listening = false;
                         whiteboard.paper().add([attr]);
                         listening = true;

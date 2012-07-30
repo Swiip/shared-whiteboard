@@ -1,7 +1,9 @@
 {
     "dependencies": {
         "express": "2.5.x",
-        "socket.io": "0.9.x"
+        "socket.io": "0.9.x",
+        "mongoose": "0.7.x",
+        "underscore": "0.3.x"
     },
     "name": "shared-whiteboard",
     "version": "0.0.1"
