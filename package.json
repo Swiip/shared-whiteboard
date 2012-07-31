@@ -1,5 +1,6 @@
 {
     "dependencies": {
+    	"connect" : "2.x",
         "express": "2.5.x",
         "socket.io": "0.9.x",
         "mongoose": "2.7.x",
