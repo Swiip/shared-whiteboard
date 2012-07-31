@@ -14,7 +14,7 @@
         <script src="js/raphael.whiteboard.js"></script>
         <script src="cordova-1.8.1.js"></script>
         <script type="text/javascript">
-            var socket, whiteboardName;
+            var socket, whiteboardName, listening = true;
 
             $(document).bind('pageinit', function(event) {
                 socket = io.connect("");
@@ -24,56 +24,23 @@
                 });
 
                 console.log("page init ", whiteboardName);
+
                 if(!whiteboardName || whiteboardName == "") {
                     $.mobile.changePage("#home");
                 }
             });
 
 			$("#home").live("pageshow", function(event) {
-				$(".open-button").live("click", function(event) {
-                    window.whiteboard = Raphael.whiteboard("editor", {
-                        width: "100%",
-                        height: "100%",
-                        editing: true
-                    });
-                });
+				$(".open-button").live("click", startWhiteboard);
 			});
             $("#whiteboard").live("pageinit", function(event) {
                 
             });
 			$("#whiteboard").live("pageshow", function(event) {
 				console.log("whiteboard", whiteboardName);
+			});
 
-                if(!whiteboardName || whiteboardName == "") {
-                    return;
-                }
-
-                var listening = true;
-
-				whiteboard.addChangeHandler(function(attr) {
-                    if(listening) {
-                        attr.whiteboard = whiteboardName;
-                        socket.emit("element", attr);
-                    }
-				});
-
-                socket.emit("connect", {
-                    whiteboard: whiteboardName
-                });
-                socket.on("init", function(elements) {
-                    listening = false;
-                    whiteboard.paper().add(elements);
-                    listening = true;
-                });
-                socket.on("element", function(attr) {
-                    if(attr.whiteboard == whiteboardName) {
-                        listening = false;
-                        whiteboard.paper().add([attr]);
-                        listening = true;
-                    }
-                });
-
-                $(".add-picture-button").live("click", function(event) {
+            $(".add-picture-button").live("click", function(event) {
                     navigator.camera.getPicture(function(data) {
                         console.log("camera success ", data);
 
@@ -84,9 +51,7 @@
                         } else {
                             src = "data:image/jpeg;base64," + data;
                         }
-                        listening = false;
                         whiteboard.addImage(src);
-                        listening = true;
                         $.mobile.changePage("#whiteboard");
 
                     }, function(data) {
@@ -96,7 +61,41 @@
                         destinationType: Camera.DestinationType.DATA_URL
                     });
                 });
-			});
+
+            function startWhiteboard() {
+                window.whiteboard = Raphael.whiteboard("editor", {
+                    width: "100%",
+                    height: "100%",
+                    editing: true
+                });
+
+                whiteboard.addChangeHandler(function(attr) {
+                    //console.log("addChangeHandler", attr.type, "listening", listening);
+                    if(listening) {
+                        attr.whiteboard = whiteboardName;
+                        socket.emit("element", attr);
+                    }
+                });
+
+                socket.emit("connect", {
+                    whiteboard: whiteboardName
+                });
+                socket.on("init", function(elements) {
+                    listening = false;
+                    var result = whiteboard.paper().add(elements);
+                    for(var i = 0; i < elements.length; i++) {
+                        result[i]._id = elements[i]._id;
+                    }
+                    listening = true;
+                });
+                socket.on("element", function(attr) {
+                    if(attr.whiteboard == whiteboardName) {
+                        listening = false;
+                        whiteboard.paper().add([attr]);
+                        listening = true;
+                    }
+                });
+            }
         </script>
     </head>
     

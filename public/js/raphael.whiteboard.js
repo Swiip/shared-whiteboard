@@ -181,7 +181,21 @@
 			e = e.originalEvent;
 			e.preventDefault();
 
+			console.log("touchend", e);
+
 			_mouseup(e);
+			
+
+			var svgImage = _imageHandler.finish(e, whiteboard);
+			if(svgImage) {
+				var attr = svgImage.attr();
+				attr.type = "image";
+				attr._id = svgImage._id;
+
+				console.log("_touchend", attr);
+
+				_fireChange(attr);
+			}
 		}
 
 		function _fireChange(element) {
@@ -311,7 +325,18 @@
 		}
 
 		self.finish = function(e, whiteboard) {
+			if(svgImage) {
+				var tmp = svgImage;
+				
+				svgImage = null;
+				points = null;
 
+				console.log("imageHandler finish with", tmp);
+
+				return tmp;
+			} else {
+				return null;
+			}
 		}
 
 		function _readPoints(e, whiteboard) {
