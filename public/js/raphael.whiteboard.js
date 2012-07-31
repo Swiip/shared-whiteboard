@@ -31,6 +31,8 @@
 
 		var _pen = new Pen();
 
+		var _imageHandler = new ImageHandler();
+
 		var _changeHandlers = [];
 
 		self.paper = function() {
@@ -158,6 +160,8 @@
 			if (e.touches.length == 1) {
 				var touch = e.touches[0];
 				_mousedown(touch);
+			} else if(e.touches.length == 2 && e.srcElement instanceof SVGImageElement) {
+				_imageHandler.start(e, whiteboard);
 			}
 		}
 		
@@ -168,6 +172,8 @@
 			if (e.touches.length == 1) {
 				var touch = e.touches[0];
 				_mousemove(touch);
+			} else if(e.touches.length == 2 && e.srcElement instanceof SVGImageElement) {
+				_imageHandler.move(e, whiteboard);
 			}
 		}
 		
@@ -265,6 +271,61 @@
 				return "";
 			}
 		};
+	}
+
+	var ImageHandler = function() {
+		var self = this;
+
+		var svgImage;
+		var points;
+
+		self.start = function(e, whiteboard) {
+			points = _readPoints(e, whiteboard);
+			svgImage = whiteboard.paper().getById(e.target.raphaelid);
+			console.log("image handler start", svgImage);
+		}
+
+		self.move = function(e, whiteboard) {
+			var newPoints = _readPoints(e, whiteboard);
+
+			var slideX1 = newPoints[0] - points[0];
+			var slideX2 = newPoints[2] - points[2];
+			var slideX = slideX1 > slideX2 ? slideX2 : slideX1;
+			var slideY1 = newPoints[1] - points[1];
+			var slideY2 = newPoints[3] - points[3];
+			var slideY = slideY1 > slideY2 ? slideY2 : slideY1;
+
+			var size = Math.sqrt(Math.pow(points[0] - points[2], 2) + Math.pow(points[1] - points[3], 2));
+			var sizeNew = Math.sqrt(Math.pow(newPoints[0] - newPoints[2], 2) + Math.pow(newPoints[1] - newPoints[3], 2));
+			var portion = sizeNew / size;
+
+			var attrs = svgImage.attr();
+			svgImage.attr({
+				x: attrs.x + slideX - (attrs.width * portion - attrs.width) / 2,
+				y: attrs.y + slideY - (attrs.height * portion - attrs.height) / 2,
+				width: attrs.width * portion,
+				height: attrs.height * portion
+			});
+
+			points = newPoints;
+		}
+
+		self.finish = function(e, whiteboard) {
+
+		}
+
+		function _readPoints(e, whiteboard) {
+			_offset = $(whiteboard.container()).offset();
+
+			var points = [];
+			var touch1 = e.touches[0];
+			points.push(touch1.pageX - _offset.left);
+			points.push(touch1.pageY - _offset.top);
+			var touch2 = e.touches[1];
+			points.push(touch2.pageX - _offset.left);
+			points.push(touch2.pageY - _offset.top);
+			return points;
+		}
 	}
 
 })(window.Raphael, window.jQuery);
