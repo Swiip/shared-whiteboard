@@ -7,7 +7,7 @@
     },
     "engines": {
         "node": ">= 0.6.0 < 0.7.0"
-    }
+    },
     "name": "shared-whiteboard",
     "version": "0.0.1"
 }
