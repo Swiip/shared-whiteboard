@@ -110,8 +110,11 @@
 
 		self.addImage = function(src) {
 			var image = whiteboard.paper().image(src, 0, 0, 512, 512);
-			var attr = image.attr();
-			attr.type = "image";
+			_imageHandler.activate(image);
+		}
+
+		self.validateImage = function() {
+			var attr = _imageHandler.validate();
 			_fireChange(attr);
 		}
 
@@ -157,9 +160,13 @@
 			e = e.originalEvent;
 			e.preventDefault();
 
-			if (e.touches.length == 1) {
-				var touch = e.touches[0];
-				_mousedown(touch);
+			console.log("touchstart ", _imageHandler.isActivated(), e.touches.length, e.srcElement);
+
+			if(!_imageHandler.isActivated()) {
+				if (e.touches.length == 1) {
+					var touch = e.touches[0];
+					_mousedown(touch);
+				}
 			} else if(e.touches.length == 2 && e.srcElement instanceof SVGImageElement) {
 				_imageHandler.start(e, whiteboard);
 			}
@@ -169,9 +176,11 @@
 			e = e.originalEvent;
 			e.preventDefault();
 
-			if (e.touches.length == 1) {
-				var touch = e.touches[0];
-				_mousemove(touch);
+			if(!_imageHandler.isActivated()) {
+				if (e.touches.length == 1) {
+					var touch = e.touches[0];
+					_mousemove(touch);
+				}
 			} else if(e.touches.length == 2 && e.srcElement instanceof SVGImageElement) {
 				_imageHandler.move(e, whiteboard);
 			}
@@ -183,18 +192,10 @@
 
 			console.log("touchend", e);
 
-			_mouseup(e);
-			
-
-			var svgImage = _imageHandler.finish(e, whiteboard);
-			if(svgImage) {
-				var attr = svgImage.attr();
-				attr.type = "image";
-				attr._id = svgImage._id;
-
-				console.log("_touchend", attr);
-
-				_fireChange(attr);
+			if(!_imageHandler.isActivated()) {
+				_mouseup(e);
+			} else {
+				_imageHandler.finish(e, whiteboard);
 			}
 		}
 
@@ -287,15 +288,24 @@
 		};
 	}
 
-	var ImageHandler = function() {
+	var ImageHandler = function(image) {
 		var self = this;
 
 		var svgImage;
 		var points;
 
+		self.isActivated = function() {
+			console.log("isActivated", svgImage);
+			return svgImage != null;
+		}
+
+		self.activate = function(image) {
+			console.log("activate", image);
+			svgImage = image;
+		}
+
 		self.start = function(e, whiteboard) {
 			points = _readPoints(e, whiteboard);
-			svgImage = whiteboard.paper().getById(e.target.raphaelid);
 			console.log("image handler start", svgImage);
 		}
 
@@ -328,7 +338,6 @@
 			if(svgImage) {
 				var tmp = svgImage;
 				
-				svgImage = null;
 				points = null;
 
 				console.log("imageHandler finish with", tmp);
@@ -337,6 +346,15 @@
 			} else {
 				return null;
 			}
+		}
+
+		self.validate = function() {
+			var attr = svgImage.attr();
+			attr.type = "image";
+
+			svgImage = null;
+
+			return attr;
 		}
 
 		function _readPoints(e, whiteboard) {

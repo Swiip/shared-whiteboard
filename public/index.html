@@ -28,6 +28,8 @@
                 if(!whiteboardName || whiteboardName == "") {
                     $.mobile.changePage("#home");
                 }
+
+                console.log("coucou", $("#whiteboard h1 a").size());
             });
 
 			$("#home").live("pageshow", function(event) {
@@ -41,26 +43,39 @@
 			});
 
             $(".add-picture-button").live("click", function(event) {
-                    navigator.camera.getPicture(function(data) {
-                        console.log("camera success ", data);
+                navigator.camera.getPicture(function(data) {
+                    console.log("camera success ", data);
 
-                        var src;
-                        //Hook pour le bouchon PhoneGap
-                        if(data == "chrome-logo.png") {
-                            src = data;
-                        } else {
-                            src = "data:image/jpeg;base64," + data;
-                        }
-                        whiteboard.addImage(src);
-                        $.mobile.changePage("#whiteboard");
-
-                    }, function(data) {
-                        console.log("camera fail " + data);
-                    }, {
-                        quality: 20,
-                        destinationType: Camera.DestinationType.DATA_URL
-                    });
+                    var src;
+                    //Hook pour le bouchon PhoneGap
+                    if(data == "chrome-logo.png") {
+                        src = data;
+                    } else {
+                        src = "data:image/jpeg;base64," + data;
+                    }
+                    whiteboard.addImage(src);
+                    $.mobile.changePage("#whiteboard");
+                    $("#whiteboard h1 a.image-ok").css("display", "block");
+                    $("#whiteboard h1 a.options").css("display", "none");
+                }, function(data) {
+                    console.log("camera fail " + data);
+                }, {
+                    quality: 20,
+                    destinationType: Camera.DestinationType.DATA_URL
                 });
+            });
+
+            $("#whiteboard h1 a.image-ok").live("click", function(event) {
+                $("#whiteboard h1 a.image-ok").css("display", "none");
+                $("#whiteboard h1 a.options").css("display", "block");
+                whiteboard.validateImage();
+            });
+
+            $(".clear-whiteboard-button").live("click", function(event) {
+                socket.emit("clear", whiteboardName);
+                whiteboard.paper().clear();
+                $.mobile.changePage("#whiteboard");
+            });
 
             function startWhiteboard() {
                 window.whiteboard = Raphael.whiteboard("editor", {
@@ -83,14 +98,12 @@
                 socket.on("init", function(elements) {
                     listening = false;
                     var result = whiteboard.paper().add(elements);
-                    for(var i = 0; i < elements.length; i++) {
-                        result[i]._id = elements[i]._id;
-                    }
                     listening = true;
                 });
                 socket.on("element", function(attr) {
                     if(attr.whiteboard == whiteboardName) {
                         listening = false;
+                        console.log("receiving new element of type ", attr.type);
                         whiteboard.paper().add([attr]);
                         listening = true;
                     }
@@ -117,7 +130,8 @@
         <div data-role="page" id="whiteboard">
         	<div data-role="header">
                 <h1>
-                    <a href="#options" data-icon="gear" class="ui-btn-right">Options</a>
+                    <a data-icon="check" class="ui-btn-right image-ok" style="display: none;">Ok</a>
+                    <a href="#options" data-icon="gear" class="ui-btn-right options">Options</a>
                     Whiteboard
                 </h1>
             </div>
@@ -128,6 +142,7 @@
                 <h1>Options</h1>
             </div>
             <a data-role="button" class="add-picture-button">Add a picture</a>
+            <a data-role="button" class="clear-whiteboard-button">Clear whiteboard</a>
         </div>
     </body>
 

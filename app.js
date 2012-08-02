@@ -12,7 +12,7 @@ var io = socketio.listen(expressServer, {
 	"log level": 2
 });
 
-var mongo = mongoose.createConnection('mongodb://whiteboard:wh1teboard@flame.mongohq.com:27100/shared-whiteboard');
+var mongo = mongoose.createConnection('mongodb://whiteboard:wh1teboard@alex.mongohq.com:10007/shared-whiteboard');
 
 var port = parseInt(process.env.PORT, 10) || 1337;
 expressServer.listen(port);
@@ -37,28 +37,18 @@ io.sockets.on("connection", function (socket) {
 			}
   		});
   	});
+  	socket.on("clear", function(data) {
+  		console.log("clear message, deleting elements for whiteboard", data);
+		WhiteBoardElement.find({whiteboard: data}).remove();
+  	});
   	socket.on("element", function(data) {
+		console.log("element message, receiving new", data.type, "element for", data.whiteboard, "whiteboard");
 		socket.broadcast.emit("element", data);
-		
-		if(data._id) {
-			console.log("element message, receiving update for", data.type, "element for", data.whiteboard, "whiteboard");
-			WhiteBoardElement.findOne({
-				_id: data._id
-			}, function(err, doc) {
-				if(err) {
-					console.error("error on updating element in mongodb", err);
-				}
-				_.extend(doc, data);
-				doc.save();
-			});
-		} else {
-			console.log("element message, receiving new", data.type, "element for", data.whiteboard, "whiteboard");
-			var instance = new WhiteBoardElement(data, false);
-			instance.save(function(err) {
-				if(err) {
-					console.error("error on adding the new element in mongodb", err);
-				}
-			});
-		}
+		var instance = new WhiteBoardElement(data, false);
+		instance.save(function(err) {
+			if(err) {
+				console.error("error on adding the new element in mongodb", err);
+			}
+		});
 	});
 });
