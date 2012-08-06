@@ -221,8 +221,19 @@
 		var _c = null;
 		var _points = [];
 
+		self.options = function(object) {
+			if(object.color) {
+				_color = object.color;
+			}
+			if(object.width) {
+				_width = object.width;
+			}
+		}
+
 		self.start = function(e, whiteboard) {
 			_drawing = true;
+
+			console.log("start pen ", _color, _width);
 
 			_offset = $(whiteboard.container()).offset();
 			

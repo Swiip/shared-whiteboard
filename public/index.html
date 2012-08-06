@@ -3,7 +3,7 @@
     
     <head>
         <title>
-            My Page
+            Shared Whiteboard
         </title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css"/>
@@ -47,7 +47,7 @@
                     console.log("camera success ", data);
 
                     var src;
-                    //Hook pour le bouchon PhoneGap
+                    //Hook for PhoneGap simulation stub
                     if(data == "chrome-logo.png") {
                         src = data;
                     } else {
@@ -55,8 +55,8 @@
                     }
                     whiteboard.addImage(src);
                     $.mobile.changePage("#whiteboard");
-                    $("#whiteboard h1 a.image-ok").css("display", "block");
-                    $("#whiteboard h1 a.options").css("display", "none");
+                    $("#whiteboard a.image-ok").css("display", "block");
+                    $("#whiteboard a.options").css("display", "none");
                 }, function(data) {
                     console.log("camera fail " + data);
                 }, {
@@ -65,9 +65,9 @@
                 });
             });
 
-            $("#whiteboard h1 a.image-ok").live("click", function(event) {
-                $("#whiteboard h1 a.image-ok").css("display", "none");
-                $("#whiteboard h1 a.options").css("display", "block");
+            $("#whiteboard a.image-ok").live("click", function(event) {
+                $("#whiteboard a.image-ok").css("display", "none");
+                $("#whiteboard a.options").css("display", "block");
                 whiteboard.validateImage();
             });
 
@@ -75,6 +75,20 @@
                 socket.emit("clear", whiteboardName);
                 whiteboard.paper().clear();
                 $.mobile.changePage("#whiteboard");
+            });
+
+            $("input:radio[name=color]").live("change", function(event) {
+                console.log("color change", $("input:radio[name=color]:checked").val());
+                whiteboard.pen().options({
+                    color: $("input:radio[name=color]:checked").val()
+                });
+            });
+
+            $("#width").live("change", function(event) {
+                console.log("width change", $("#width").val());
+                whiteboard.pen().options({
+                    width: $("#width").val()
+                });
             });
 
             function startWhiteboard() {
@@ -85,7 +99,6 @@
                 });
 
                 whiteboard.addChangeHandler(function(attr) {
-                    //console.log("addChangeHandler", attr.type, "listening", listening);
                     if(listening) {
                         attr.whiteboard = whiteboardName;
                         socket.emit("element", attr);
@@ -116,12 +129,12 @@
         <div data-role="page" id="home">
             <div data-role="header">
                 <h1>
-                    Home
+                    Choose your whitboard
                 </h1>
             </div>
             <div data-role="content">
                 <h1>
-                    Hello world
+                    Whiteboard's name:
                 </h1>
                 <input class="whiteboard-name" type="text" value="" />
                 <a class="open-button" data-role="button" href="#whiteboard">Open</a>
@@ -130,19 +143,29 @@
         <div data-role="page" id="whiteboard">
         	<div data-role="header">
                 <h1>
-                    <a data-icon="check" class="ui-btn-right image-ok" style="display: none;">Ok</a>
-                    <a href="#options" data-icon="gear" class="ui-btn-right options">Options</a>
                     Whiteboard
                 </h1>
+                <a data-icon="check" class="ui-btn-right image-ok" style="display: none;">Ok</a>
+                <a href="#options" data-icon="gear" class="ui-btn-right options">Options</a>
             </div>
             <div id="editor"></div>
         </div>
         <div data-role="page" id="options">
             <div data-role="header">
+                <a href="#whiteboard" data-icon="arrow-l">Ok</a>
                 <h1>Options</h1>
             </div>
             <a data-role="button" class="add-picture-button">Add a picture</a>
-            <a data-role="button" class="clear-whiteboard-button">Clear whiteboard</a>
+            <fieldset data-role="controlgroup" data-type="horizontal">
+                <legend>Color</legend>
+                <input type="radio" name="color" id="color-black" value="black" checked="checked" /> <label for="color-black">Black</label>
+                <input type="radio" name="color" id="color-red" value="red" /> <label for="color-red">Red</label>
+                <input type="radio" name="color" id="color-blue" value="blue" /> <label for="color-blue">Blue</label>
+                <input type="radio" name="color" id="color-green" value="green" /> <label for="color-green">Green</label>
+            </fieldset>
+            <label for="width">Width:</label>
+            <input type="range" name="width" id="width" value="5" min="1" max="30" />
+            <a data-role="button" data-icon="delete" class="clear-whiteboard-button">Clear whiteboard</a>
         </div>
     </body>
 
